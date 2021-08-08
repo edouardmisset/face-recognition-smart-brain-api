@@ -1,8 +1,14 @@
 const express = require('express');
+const cors = require('cors');
+const bcrypt = require('bcrypt');
+
+// bcrypt options
+const saltRounds = 10;
 
 const app = express();
 
 app.use(express.json());
+app.use(cors());
 
 const database = {
   users: [
@@ -10,7 +16,7 @@ const database = {
       id: 1,
       name: 'John Doe',
       email: 'john@gmail.com',
-      password: '12345678',
+      password: 'cookies',
       entries: 4,
       joined: new Date(),
     },
@@ -23,10 +29,17 @@ const database = {
       joined: new Date(),
     },
   ],
+  login: [
+    {
+      id: 1,
+      email: 'john@gmail.com',
+      hash: '',
+    },
+  ],
 };
 
-app.listen(3000, () => {
-  console.log('Server listening on port 3000');
+app.listen(5000, () => {
+  console.log('Server listening on port 5000');
 });
 
 // / --> res = this is working
@@ -50,11 +63,16 @@ app.post('/signin', (req, res) => {
 // /register --> POST res = new user
 app.post('/register', (req, res) => {
   const { email, name, password } = req.body;
+
+  bcrypt.hash(password, saltRounds).then(hash => {
+    // Store hash in your password DB.
+    console.log(hash);
+  });
+
   const newUser = {
     id: database.users.length + 1,
     name,
     email,
-    password,
     entries: 0,
     joined: new Date(),
   };
@@ -62,9 +80,29 @@ app.post('/register', (req, res) => {
   res.send(newUser);
 });
 
-/*
+// /profile/:userId --> GET res = user
+app.get('/profile/:id', (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  let found = false;
+  database.users.forEach(user => {
+    if (user.id === id) {
+      found = true;
+      return res.send(user);
+    }
+  });
+  if (!found) {
+    res.status(404).send('user not found');
+  }
+});
 
-/profile/:userId --> GET res = user
-/image --> PUT --> res = user
-
-*/
+// /image --> POST --> res = user
+app.post('/image', (req, res) => {
+  const { id } = req.body;
+  const user = database.users.find(user => user.id === id);
+  if (user) {
+    user.entries++;
+    res.json(user.entries);
+  } else {
+    res.status(404).send('user not found');
+  }
+});
