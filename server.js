@@ -61,35 +61,59 @@ app.get('/', (req, res) => {
 // /signin --> POST success / fail
 
 app.post('/signin', (req, res) => {
-  if (
-    req.body.email === database.users[0].email &&
-    req.body.password === database.users[0].password
-  ) {
-    res.send(database.users[0]);
-  } else {
-    res.status(401).json('error logging in');
-  }
+  const { email, password } = req.body;
+
+  db.select('email', 'hash')
+    .from('login')
+    .where({ email })
+    .then(user =>
+      bcrypt.compareSync(password, user[0].hash)
+        ? db
+            .select('*')
+            .from('users')
+            .where({ email })
+            .then(user => {
+              res.send(user[0]);
+            })
+            .catch(err => {
+              res.status(400).send('Unable to get user');
+            })
+        : res.status(401).send('Wrong credentials')
+    )
+    .catch(err => {
+      res.status(400).send('Error loggin in');
+    });
 });
 
 // /register --> POST res = new user
 app.post('/register', (req, res) => {
   const { email, name, password } = req.body;
 
-  db('users')
-    .returning('*')
-    .insert({
-      email,
-      name,
-      joined: new Date(),
-    })
-    .then(user => res.send(user[0]))
-    .catch(err => {
-      res.status(400).send('unable to register');
-    });
-
   bcrypt.hash(password, saltRounds).then(hash => {
     // Store hash in your password DB.
-    console.log(hash);
+    db.transaction(trx => {
+      trx
+        .insert({
+          email,
+          hash,
+        })
+        .into('login')
+        .returning('email')
+        .then(loginEmail => {
+          return trx('users')
+            .returning('*')
+            .insert({
+              email: loginEmail[0],
+              name,
+              joined: new Date(),
+            })
+            .then(user => res.send(user[0]));
+        })
+        .then(trx.commit)
+        .catch(trx.rollback);
+    }).catch(err => {
+      res.status(400).send('unable to register');
+    });
   });
 });
 
