@@ -19,34 +19,6 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-const database = {
-  users: [
-    {
-      id: 1,
-      name: 'John Doe',
-      email: 'john@gmail.com',
-      password: 'cookies',
-      entries: 4,
-      joined: new Date(),
-    },
-    {
-      id: 2,
-      name: 'Jane Doe',
-      email: 'jane@gmail.com',
-      password: 'bananas',
-      entries: 2,
-      joined: new Date(),
-    },
-  ],
-  login: [
-    {
-      id: 1,
-      email: 'john@gmail.com',
-      hash: '',
-    },
-  ],
-};
-
 const port = process.env.PORT || 5000;
 
 app.listen(port, () => {
@@ -55,7 +27,9 @@ app.listen(port, () => {
 
 // / --> res = this is working
 app.get('/', (req, res) => {
-  res.send(database.users);
+  db.select('*')
+    .from('users')
+    .then(users => res.send(users));
 });
 
 // /signin --> POST success / fail
