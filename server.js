@@ -36,7 +36,6 @@ app.get('/', (req, res) => {
 
 app.post('/signin', (req, res) => {
   const { email, password } = req.body;
-
   db.select('email', 'hash')
     .from('login')
     .where({ email })
@@ -50,12 +49,12 @@ app.post('/signin', (req, res) => {
               res.send(user[0]);
             })
             .catch(err => {
-              res.status(400).send('Unable to get user');
+              res.status(400).json('Unable to get user');
             })
-        : res.status(401).send('Wrong credentials')
+        : res.status(401).json('Wrong credentials')
     )
     .catch(err => {
-      res.status(400).send('Error loggin in');
+      res.status(400).json('Error loggin in');
     });
 });
 
@@ -86,7 +85,7 @@ app.post('/register', (req, res) => {
         .then(trx.commit)
         .catch(trx.rollback);
     }).catch(err => {
-      res.status(400).send('unable to register');
+      res.status(400).json('unable to register');
     });
   });
 });
@@ -98,11 +97,11 @@ app.get('/profile/:id', (req, res) => {
     .from('users')
     .where({ id })
     .then(user =>
-      user.length ? res.send(user[0]) : res.status(404).send('user not found')
+      user.length ? res.send(user[0]) : res.status(404).json('user not found')
     )
     .catch(err => {
       console.error(err);
-      res.status(400).send('unable to get user');
+      res.status(400).json('unable to get user');
     });
 });
 
@@ -116,6 +115,6 @@ app.put('/image', (req, res) => {
     .returning('entries')
     .then(data => res.send(data[0]))
     .catch(err => {
-      res.status(400).send('unable to get entries');
+      res.status(400).json('unable to get entries');
     });
 });
