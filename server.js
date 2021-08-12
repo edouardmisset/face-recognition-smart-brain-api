@@ -1,10 +1,11 @@
 const express = require('express');
 const cors = require('cors');
+require('dotenv').config();
 const bcrypt = require('bcrypt');
 const { handleRegister } = require('./controllers/register');
 const { handleSignin } = require('./controllers/signin');
 const { handleProfileGet } = require('./controllers/profile');
-const { handleImage } = require('./controllers/image');
+const { handleImage, handleApiCall } = require('./controllers/image');
 
 const db = require('knex')({
   client: 'pg',
@@ -51,3 +52,6 @@ app.get('/profile/:id', (req, res) => handleProfileGet(req, res, db));
 
 // /image --> POST --> res = user
 app.put('/image', (req, res) => handleImage(req, res, db));
+
+// /imageurl --> POST --> res =
+app.post('/imageurl', (req, res) => handleApiCall(req, res));
