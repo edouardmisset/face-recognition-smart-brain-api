@@ -1,6 +1,11 @@
 const express = require('express');
 const cors = require('cors');
 const bcrypt = require('bcrypt');
+const { handleRegister } = require('./controllers/register');
+const { handleSignin } = require('./controllers/signin');
+const { handleProfileGet } = require('./controllers/profile');
+const { handleImage } = require('./controllers/image');
+
 const db = require('knex')({
   client: 'pg',
   connection: {
@@ -34,87 +39,15 @@ app.get('/', (req, res) => {
 
 // /signin --> POST success / fail
 
-app.post('/signin', (req, res) => {
-  const { email, password } = req.body;
-  db.select('email', 'hash')
-    .from('login')
-    .where({ email })
-    .then(user =>
-      bcrypt.compareSync(password, user[0].hash)
-        ? db
-            .select('*')
-            .from('users')
-            .where({ email })
-            .then(user => {
-              res.send(user[0]);
-            })
-            .catch(err => {
-              res.status(400).json('Unable to get user');
-            })
-        : res.status(401).json('Wrong credentials')
-    )
-    .catch(err => {
-      res.status(400).json('Error loggin in');
-    });
-});
+app.post('/signin', (req, res) => handleSignin(req, res, db, bcrypt));
 
 // /register --> POST res = new user
-app.post('/register', (req, res) => {
-  const { email, name, password } = req.body;
-
-  bcrypt.hash(password, saltRounds).then(hash => {
-    // Store hash in your password DB.
-    db.transaction(trx => {
-      trx
-        .insert({
-          email,
-          hash,
-        })
-        .into('login')
-        .returning('email')
-        .then(loginEmail => {
-          return trx('users')
-            .returning('*')
-            .insert({
-              email: loginEmail[0],
-              name,
-              joined: new Date(),
-            })
-            .then(user => res.send(user[0]));
-        })
-        .then(trx.commit)
-        .catch(trx.rollback);
-    }).catch(err => {
-      res.status(400).json('unable to register');
-    });
-  });
-});
+app.post('/register', (req, res) =>
+  handleRegister(req, res, db, bcrypt, saltRounds)
+);
 
 // /profile/:userId --> GET res = user
-app.get('/profile/:id', (req, res) => {
-  const id = parseInt(req.params.id, 10);
-  db.select('*')
-    .from('users')
-    .where({ id })
-    .then(user =>
-      user.length ? res.send(user[0]) : res.status(404).json('user not found')
-    )
-    .catch(err => {
-      console.error(err);
-      res.status(400).json('unable to get user');
-    });
-});
+app.get('/profile/:id', (req, res) => handleProfileGet(req, res, db));
 
 // /image --> POST --> res = user
-app.put('/image', (req, res) => {
-  const { id } = req.body;
-
-  db('users')
-    .where({ id })
-    .increment('entries', 1)
-    .returning('entries')
-    .then(data => res.send(data[0]))
-    .catch(err => {
-      res.status(400).json('unable to get entries');
-    });
-});
+app.put('/image', (req, res) => handleImage(req, res, db));
