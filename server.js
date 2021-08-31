@@ -10,7 +10,7 @@ const { handleImage, handleApiCall } = require('./controllers/image')
 const db = require('knex')({
   client: 'pg',
   connection: {
-    host: 'localhost',
+    host: 'postgresql-shallow-77910',
     user: 'edouard',
     password: '',
     database: 'smart-brain',
@@ -33,6 +33,9 @@ app.listen(PORT, () => {
 
 // / --> res = this is working
 app.get('/', (req, res) => {
+  // db.select('*')
+  //   .from('users')
+  //   .then(users => res.send(users))
   res.send('API is working, but DB is down')
 })
 
