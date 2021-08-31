@@ -1,11 +1,11 @@
-const express = require('express');
-const cors = require('cors');
-require('dotenv').config();
-const bcrypt = require('bcrypt');
-const { handleRegister } = require('./controllers/register');
-const { handleSignin } = require('./controllers/signin');
-const { handleProfileGet } = require('./controllers/profile');
-const { handleImage, handleApiCall } = require('./controllers/image');
+const express = require('express')
+const cors = require('cors')
+require('dotenv').config()
+const bcrypt = require('bcrypt')
+const { handleRegister } = require('./controllers/register')
+const { handleSignin } = require('./controllers/signin')
+const { handleProfileGet } = require('./controllers/profile')
+const { handleImage, handleApiCall } = require('./controllers/image')
 
 const db = require('knex')({
   client: 'pg',
@@ -15,43 +15,47 @@ const db = require('knex')({
     password: '',
     database: 'smart-brain',
   },
-});
+})
 
 // bcrypt options
-const saltRounds = 10;
+const saltRounds = 10
 
-const app = express();
+const app = express()
 
-app.use(express.json());
-app.use(cors());
+app.use(express.json())
+app.use(cors())
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5000
 
 app.listen(PORT, () => {
-  console.log(`Server listening on port ${PORT}`);
-});
+  console.log(`Server listening on port ${PORT}`)
+})
 
 // / --> res = this is working
 app.get('/', (req, res) => {
-  db.select('*')
-    .from('users')
-    .then(users => res.send(users));
-});
+  if (db) {
+    db.select('*')
+      .from('users')
+      .then(users => res.send(users))
+  } else {
+    res.send('this is working')
+  }
+})
 
 // /signin --> POST success / fail
 
-app.post('/signin', (req, res) => handleSignin(req, res, db, bcrypt));
+app.post('/signin', (req, res) => handleSignin(req, res, db, bcrypt))
 
 // /register --> POST res = new user
 app.post('/register', (req, res) =>
   handleRegister(req, res, db, bcrypt, saltRounds)
-);
+)
 
 // /profile/:userId --> GET res = user
-app.get('/profile/:id', (req, res) => handleProfileGet(req, res, db));
+app.get('/profile/:id', (req, res) => handleProfileGet(req, res, db))
 
 // /image --> POST --> res = user
-app.put('/image', (req, res) => handleImage(req, res, db));
+app.put('/image', (req, res) => handleImage(req, res, db))
 
 // /imageurl --> POST --> res =
-app.post('/imageurl', (req, res) => handleApiCall(req, res));
+app.post('/imageurl', (req, res) => handleApiCall(req, res))
