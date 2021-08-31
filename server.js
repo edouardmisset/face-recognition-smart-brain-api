@@ -33,13 +33,7 @@ app.listen(PORT, () => {
 
 // / --> res = this is working
 app.get('/', (req, res) => {
-  if (db) {
-    db.select('*')
-      .from('users')
-      .then(users => res.send(users))
-  } else {
-    res.send('this is working')
-  }
+  res.send('API is working, but DB is down')
 })
 
 // /signin --> POST success / fail
