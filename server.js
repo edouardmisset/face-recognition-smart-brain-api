@@ -40,7 +40,6 @@ app.get('/', (req, res) => {
 })
 
 // /signin --> POST success / fail
-
 app.post('/signin', (req, res) => handleSignin(req, res, db, bcrypt))
 
 // /register --> POST res = new user
